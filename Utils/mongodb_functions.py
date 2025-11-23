@@ -1,24 +1,24 @@
 import sys
 import os
-import pymongo
 from pymongo import MongoClient, ReturnDocument
 from Utils import mongodb_connection
 import re
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 ph = PasswordHasher()
+from tkinter import messagebox
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 sys.path.append(project_root)
 
-def add_user_to_db(username, password):
+def add_user_to_db(login, password):
     if not is_password_valid(password):
         print("Пароль не відповідає вимогам безпеки.")
         return False
     user_doc = {
         "_id": get_next_sequence("user_id"),
-        "username": username,
+        "login": login,
         "password": hash_password(password),
         "access_right": "user"
     
@@ -26,7 +26,7 @@ def add_user_to_db(username, password):
     }
     try:
         mongodb_connection.keys_collection.insert_one(user_doc)
-        print(f"Користувача {username} збережено в MongoDB.")
+        print(f"Користувача {login} збережено в MongoDB.")
         return True  
     except Exception as e:
         print(f"Помилка запису: {e}")
@@ -74,13 +74,12 @@ def hash_password(plain_password):
     """
     return ph.hash(plain_password)
 
-def verify_password(stored_hash, plain_password_input):
-    """
-    Перевіряє, чи підходить введений пароль до збереженого хешу.
-    Повертає True, якщо пароль вірний, і False, якщо ні.
-    """
+def verify_password(entered_login, plain_password_input):
+    user_doc = mongodb_connection.keys_collection.find_one({"login": entered_login})
+    if not user_doc:
+        return False
     try:
-        ph.verify(stored_hash, plain_password_input)
+        ph.verify(user_doc['password'], plain_password_input)
         
         return True
     except VerifyMismatchError:

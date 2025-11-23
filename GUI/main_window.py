@@ -43,9 +43,9 @@ list_Text.pack()
 
 def refresh_user_list():
     keys = mongodb_functions.get_all_keys_connection()
-    list_Text.delete(1.0, tk.END)  # Очищаємо текстове поле
+    list_Text.delete(1.0, tk.END)
     for key in keys:
-        list_Text.insert(tk.END, f"Username: {key['username']}, Password: {key['password']}\n")
+        list_Text.insert(tk.END, f"ID: {key['_id']}, Login: {key['login']}, Password: {key['password']}\n")
 
 def clear_entries():
     login_Entry.delete(0, tk.END)

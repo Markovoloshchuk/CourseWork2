@@ -2,6 +2,7 @@ import sys
 import os
 import pymongo
 from pymongo import MongoClient
+from bson.binary import Binary
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
@@ -12,10 +13,13 @@ sys.path.append(project_root)
 try:
     cluster = MongoClient("mongodb+srv://voloshchukmark:cipmbinjBINJ228@courseproject.xogedrt.mongodb.net/")
 
-    db = cluster["mongodbVSCodePlaygroundDB"]
+    db = cluster["atelier_fashion"]
 
     keys_collection = db["keys"]
     counters_collection = db["counters"]
+    model_images_collection = db["images_models"]
+    fabric_images_collection = db["images_fabrics"]
+    images_collection = db["images"]
     
     print("Підключення до БД успішне!")
 except Exception as e:
