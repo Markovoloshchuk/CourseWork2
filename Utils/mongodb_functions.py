@@ -67,12 +67,12 @@ def is_password_valid(password):
     else:
         return False
     
-def hash_password(plain_password):
+def hash_password(password):
     """
     Приймає звичайний пароль (наприклад, 'admin123').
     Повертає зашифрований рядок (хеш).
     """
-    return ph.hash(plain_password)
+    return ph.hash(password)
 
 def verify_password(entered_login, plain_password_input):
     user_doc = mongodb_connection.keys_collection.find_one({"login": entered_login})
@@ -85,3 +85,22 @@ def verify_password(entered_login, plain_password_input):
     except VerifyMismatchError:
         return False
 
+def uptade_password(entered_login, password):
+    user_doc = mongodb_connection.keys_collection.find_one({"login": entered_login})
+    if not user_doc:
+        return False
+    try:
+        hashed_password = hash_password(password)
+        mongodb_connection.keys_collection.update_one({"login": entered_login}, {"$set": {"password": hashed_password}})
+
+        return True
+    except:
+        return False
+    
+def get_user(entered_login):
+    if entered_login:
+        if mongodb_connection.keys_collection.find_one({"login": entered_login}):
+            return True
+        else:
+            messagebox.showerror("Error", "No user with such Login!")
+            return False

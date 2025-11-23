@@ -1,10 +1,29 @@
-import sys
-import os
+import tkinter as tk
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(current_dir)
-sys.path.append(project_root)
+from GUI.Authentication import login
 
-from GUI import login
+class MainApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Atelier")
+        self.geometry("500x700")
+        self.resizable(False, False)
 
-login.open_login_window()
+        self.container = tk.Frame(self, bg="white")
+        self.container.pack(fill="both", expand=True)
+
+        self.current_frame = None
+
+        self.switch_frame(login.LoginView)
+
+    def switch_frame(self, frame_class):
+        if self.current_frame is not None:
+            self.current_frame.destroy()
+
+        self.current_frame = frame_class(self.container, self)
+        self.current_frame.pack(fill="both", expand=True)
+
+if __name__ == "__main__":
+    app = MainApp()
+    app.mainloop()
+    
