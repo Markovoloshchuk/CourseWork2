@@ -8,7 +8,7 @@ from Utils import mongodb_functions
 from Utils import tkinter_general
 from GUI.Authentication import registration 
 from GUI.Authentication import forgot_password 
-from GUI import collection
+from GUI.MainMenu import main_frame
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
@@ -90,6 +90,9 @@ class LoginView(tk.Frame):
         # Прив'язуємо події фокусу
         self.password_Entry.bind("<FocusOut>", self.on_focus_out)
         self.password_Entry.bind("<FocusIn>", self.on_focus_in)
+        self.password_Entry.bind("<Return>", self.on_enter_button_press)
+
+        self.login_Entry.bind("<Return>", self.on_enter_button_press)
         
         self.login_Entry.bind("<Button-1>", self.keep_focus)
         self.password_Entry.bind("<Button-1>", self.keep_focus)
@@ -111,12 +114,8 @@ class LoginView(tk.Frame):
         entered_password = self.password_Entry.get()
         
         if mongodb_functions.verify_password(entered_login, entered_password):
-            # ВАРІАНТ SPA: Перемикаємо фрейм
-            # Імпортуємо тут, щоб уникнути циклічного імпорту
-            
-            
             messagebox.showinfo("Успіх", "Вхід успішний!")
-            #self.controller.switch_frame(CollectionView)
+            self.controller.switch_frame(main_frame.MainFrameView)
         else:
             messagebox.showerror("Помилка", "Невірний логін або пароль.")
 
@@ -148,3 +147,12 @@ class LoginView(tk.Frame):
     def dismiss_focus(self, event):
         # Фокус переводимо на ГОЛОВНЕ вікно
         self.controller.focus_set()
+    
+    def on_enter_button_press(self, event):
+        print(f"Кнопку натиснуто у віджеті")
+        if event.widget == self.login_Entry:
+            self.password_Entry.focus_set()
+        elif event.widget == self.password_Entry:
+            self.handle_login()
+
+    
