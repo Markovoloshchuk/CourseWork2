@@ -208,7 +208,12 @@ class CatalogView(tk.Frame):
 
         # Ми ставимо поріг 0.9 (90%), щоб почати вантажити трохи заздалегідь
         current_position = self.canvas.yview()[1]
+
+        top, bottom = self.canvas.yview()
         
+        if top == 0.0 and bottom == 1.0:
+            return
+
         if current_position > 0.9:
             self.load_more_products()  
 
@@ -307,8 +312,7 @@ class CatalogView(tk.Frame):
                 field_name = "fabric_name"
                 field_price = "price_per_meter" # Перевірте, чи точно так названо в БД
 
-            # Формуємо проекцію
-            projection = {field_name: 1, field_price: 1, "image": 1, "in_stock": 1}
+            projection = None
 
             raw_data = mongodb_functions.get_documents_paginated(
                 collection_name=collection,
@@ -340,14 +344,32 @@ class CatalogView(tk.Frame):
                 price = ""
                 if self.state == "model":
                     price = "price"
-                else:
-                    price = "price_per_meter"
-                processed_items.append({
+                    processed_items.append({
                     "name": item.get(f"{self.state}_name", "Unknown"),
                     "price": item.get(price, 0),
                     "pil_image": pil_image,
-                    "in_stock": item.get("in_stock", False)
+                    "in_stock": item.get("in_stock", False),
+                    "description": item.get("description", ""),
+                    "recommended_fabric": item.get("recommended_fabric", ""),
+                    "recommended_accessories": item.get("recommended_accessories", ""),
+                    "original_image_binary": image_binary
                 })
+                else:
+                    price = "price_per_meter"
+                    processed_items.append({
+                    "name": item.get(f"{self.state}_name", "Unknown"),
+                    "price": item.get(price, 0),
+                    "pil_image": pil_image,
+                    "in_stock": item.get("in_stock", False),
+                    "description": item.get("description", ""),
+                    "fabric_color": item.get("fabric_color", ""),
+                    "fabric_texture": item.get("fabric_texture", ""),
+                    "fabric_manufacturer_id": item.get("fabric_manufacturer_id", ""),
+                    "width_in_meters": item.get("width_in_meters", ""),
+                    "width": f"{item.get('width_in_meters', '-')} m",
+                    "original_image_binary": image_binary
+                })
+                
 
         except Exception as e:
             print(f"Критична помилка у потоці: {e}")
@@ -426,6 +448,16 @@ class CatalogView(tk.Frame):
         else:
             # Можна додати порожній відступ, щоб картки були однієї висоти
             tk.Label(card, text="", font=("Arial", 10), bg="#ffffff").pack(pady=(0, 10))
+        
+        def on_card_click(event):
+            from GUI.MainMenu.details_view_frame import DetailsView # Лінивий імпорт, щоб уникнути циклічності
+            DetailsView(self, item_data, self.state)
+        
+        card.bind("<Button-1>", on_card_click)
+
+        for child in card.winfo_children():
+            child.bind("<Button-1>", on_card_click)
+        # ---------------------------
 
         # Логіка сітки
         self.grid_col += 1
@@ -495,6 +527,10 @@ class CatalogView(tk.Frame):
             if hasattr(self, 'filter_fabric_manufacturer_id_Entry') and self.filter_fabric_manufacturer_id_Entry.get():
                 query["manufacturer_id"] = self.filter_fabric_manufacturer_id_Entry.get().strip()
             
+            if hasattr(self, 'filter_fabric_texture_Entry') and self.filter_fabric_texture_Entry.get():
+                text = self.filter_fabric_texture_Entry.get().strip()
+                query["fabric_texture"] = {"$regex": text, "$options": "i"} # Перевірте назву поля в БД!
+
             # Приклад: Color
             if hasattr(self, 'filter_fabric_color_Entry') and self.filter_fabric_color_Entry.get():
                 text = self.filter_fabric_color_Entry.get().strip()
