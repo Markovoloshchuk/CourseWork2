@@ -194,3 +194,28 @@ def update_user_field(login, field_name, new_value):
     except Exception as e:
         print(f"Error updating user: {e}")
         return False
+
+def delete_document(collection_name, doc_id):
+    try:
+        collection = mongodb_connection.db[collection_name]
+        # Перетворюємо на ObjectId, якщо потрібно, або залишаємо як є, якщо у вас int
+        collection.delete_one({"_id": doc_id})
+        return True
+    except Exception as e:
+        print(f"Delete error: {e}")
+        return False
+
+def update_document(collection_name, doc_id, new_data):
+    try:
+        collection = mongodb_connection.db[collection_name]
+        # Видаляємо _id з new_data, щоб не намагатися його змінити (це заборонено)
+        if "_id" in new_data:
+            del new_data["_id"]
+            
+        collection.update_one({"_id": doc_id}, {"$set": new_data})
+        return True
+    except Exception as e:
+        print(f"Update error: {e}")
+        return False
+
+

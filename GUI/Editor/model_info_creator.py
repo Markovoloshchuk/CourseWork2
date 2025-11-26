@@ -10,7 +10,7 @@ sys.path.append(project_root)
 class ModelInfoCreatorFrame(BaseItemCreatorFrame):
     def __init__(self, parent, controller):
         # Ініціалізуємо базовий клас з назвою колекції та заголовком
-        super().__init__(parent, controller, collection_name="models", title_text="Model's parameters")
+        super().__init__(parent, controller, collection_name="models", title_text="Model's parameters", has_image=True)
 
     def create_specific_widgets(self):
         # Тут створюємо ТІЛЬКИ поля, специфічні для моделі
@@ -47,3 +47,13 @@ class ModelInfoCreatorFrame(BaseItemCreatorFrame):
         self.text_recomended_accessories.delete("1.0", tk.END) # type: ignore
         self.entry_model_price.delete(0, tk.END) # type: ignore
         self.check_var_in_stock.set(0) # type: ignore
+
+    def fill_specific_fields(self, data):
+        self.entry_model_name.insert(0, data.get("model_name", "")) # type: ignore
+        self.text_description.insert("1.0", data.get("description", "")) # type: ignore
+        self.text_entry_recomended_fabric.insert("1.0", data.get("recommended_fabric", "")) # type: ignore
+        self.text_recomended_accessories.insert("1.0", data.get("recommended_accessories", "")) # type: ignore
+        self.entry_model_price.insert(0, str(data.get("price", 0))) # type: ignore
+        
+        if data.get("in_stock"):
+            self.check_var_in_stock.set(1) # type: ignore

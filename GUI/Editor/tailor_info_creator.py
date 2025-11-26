@@ -1,6 +1,11 @@
+import os, sys
 import tkinter as tk
 from GUI.Editor.base_info_creator_frame import BaseItemCreatorFrame
 from Utils import mongodb_functions
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.append(project_root)
 
 class TailorInfoCreatorFrame(BaseItemCreatorFrame):
     def __init__(self, parent, controller):
@@ -35,3 +40,9 @@ class TailorInfoCreatorFrame(BaseItemCreatorFrame):
     def clear_specific_fields(self):
         self.entry_name.delete(0, tk.END) #type: ignore
         self.entry_number.delete(0, tk.END) #type: ignore
+
+    def fill_specific_fields(self, data):
+        self.clear_specific_fields()
+        
+        self.entry_name.insert(0, data.get("name", "")) #type: ignore
+        self.entry_number.insert(0, str(data.get("number", ""))) #type: ignore

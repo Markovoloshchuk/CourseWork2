@@ -1,10 +1,12 @@
-import sys
-import os
+import sys, os, io
 import tkinter as tk
+from PIL import Image, ImageTk
+import base64
 
 from Utils import tkinter_general
 from GUI.MainMenu.catalog import CatalogView
 from GUI.MainMenu.account import AccountView
+from GUI.MainMenu.info_frame import InfoFrameView
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
@@ -12,11 +14,6 @@ sys.path.append(project_root)
 
 
 # --- Фрейми-заглушки для прикладу (Створіть окремі файли для них пізніше) ---
-
-class InfoView(tk.Frame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, bg="#f0f0f0")
-        tk.Label(self, text="Інформація про ательє", font=("Arial", 20)).pack(pady=50)
 
 # --- Головний клас ---
 class MainFrameView(tk.Frame):
@@ -43,17 +40,68 @@ class MainFrameView(tk.Frame):
 
         # 4. Завантажуємо стартову сторінку (наприклад, Каталог)
         self.switch_content(CatalogView)
+    
+    def load_logo_from_binary(self, path):
+        """Читає бінарний файл без розширення і повертає ImageTk об'єкт"""
+        if not os.path.exists(path):
+            print(f"Логотип не знайдено за шляхом: {path}")
+            return None
+        
+        try:
+            # 1. Читаємо чисті байти
+            with open(path, 'rb') as f:
+                file_data = f.read()
+            
+            try:
+                # Перевірка: якщо це Base64, воно має бути текстом
+                image_bytes = base64.b64decode(file_data)
+            except Exception:
+                # Якщо помилка декодування (значить це вже була бінарна картинка),
+                # то використовуємо дані як є
+                image_bytes = file_data
+
+
+            # 2. Перетворюємо байти у віртуальний файл
+            data_stream = io.BytesIO(image_bytes)
+            
+            # 3. Відкриваємо як картинку PIL
+            pil_image = Image.open(data_stream)
+
+            width, height = pil_image.size
+            
+            new_width = int(width / 8)
+            new_height = int(height / 8)
+            
+            # Змінюємо розмір (Image.LANCZOS робить картинку чіткою при зменшенні)
+            pil_image = pil_image.resize((new_width, new_height), Image.LANCZOS) # type: ignore
+            
+            # Опціонально: ресайз логотипа, щоб не був гігантським
+            # pil_image.thumbnail((150, 80)) 
+            
+            return ImageTk.PhotoImage(pil_image)
+            
+        except Exception as e:
+            print(f"Помилка завантаження логотипа: {e}")
+            return None
 
     def create_header(self):
         header_frame = tk.Frame(self.container, bg="#e6ccff", height=100)
         header_frame.pack(fill=tk.X, pady=0) # pady прибрали, щоб було щільно, або залиште за смаком
 
         # Логотип
-        tk.Label(header_frame, text="Atelier", font=("Arial", 24, "bold"), bg="#e6ccff", fg="purple").pack(side=tk.LEFT, padx=20, pady=5)
+        logo_path = os.path.join("Data/Images/Atelier_logo_small")
+        
+        self.logo_img = self.load_logo_from_binary(logo_path)
 
+        if self.logo_img:
+            # Якщо картинка завантажилась - показуємо її
+            tk.Label(header_frame, image=self.logo_img, bg="#e6ccff").pack(side=tk.LEFT, padx=20, pady=5)
+        else:
+            # Якщо файлу немає або помилка - показуємо старий текст як запасний варіант
+            tk.Label(header_frame, text="Atelier", font=("Arial", 24, "bold"), bg="#e6ccff", fg="purple").pack(side=tk.LEFT, padx=20, pady=5)
         # Кнопки навігації (Зверніть увагу на command)
         self.create_nav_button(header_frame, "Catalog", lambda: self.switch_content(CatalogView), side=tk.LEFT)
-        self.create_nav_button(header_frame, "Info", lambda: self.switch_content(InfoView), side=tk.LEFT)
+        self.create_nav_button(header_frame, "Info", lambda: self.switch_content(InfoFrameView), side=tk.LEFT)
         self.create_nav_button(header_frame, "Editor", command=self.open_editor, side=tk.LEFT)
         
         self.create_nav_button(header_frame, "Account", lambda: self.switch_content(AccountView), side=tk.RIGHT)

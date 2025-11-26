@@ -16,7 +16,7 @@ sys.path.append(project_root)
 
 class FabricInfoCreatorFrame(BaseItemCreatorFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, controller, collection_name="fabrics", title_text="Fabric's parameters")
+        super().__init__(parent, controller, collection_name="fabrics", title_text="Fabric's parameters", has_image=True)
 
     def create_specific_widgets(self):
         self.entry_model_name = self.create_field("Fabric Name:", "entry")
@@ -62,3 +62,16 @@ class FabricInfoCreatorFrame(BaseItemCreatorFrame):
         self.entry_price_per_meter.delete(0, tk.END) # type: ignore
         self.width_in_meters.delete(0, tk.END) # type: ignore
         self.check_var_in_stock.set(0) # type: ignore
+
+    def fill_specific_fields(self, data):
+        self.clear_specific_fields()
+        self.entry_model_name.insert(0, data.get("fabric_name", "")) # type: ignore
+        self.text_description.insert("1.0", data.get("description", "")) # type: ignore
+        self.entry_fabric_manufacturer_id.insert(0, str(data.get("fabric_manufacturer_id", ""))) # type: ignore
+        self.entry_fabric_color.insert(0, data.get("fabric_color", "")) # type: ignore
+        self.entry_fabric_texture.insert(0, data.get("fabric_texture", "")) # type: ignore
+        self.entry_price_per_meter.insert(0, str(data.get("price_per_meter", 0.0))) # type: ignore
+        self.width_in_meters.insert(0, str(data.get("width_in_meters", 0.0)))# type: ignore
+
+        if data.get("in_stock"):
+            self.check_var_in_stock.set(1)# type: ignore

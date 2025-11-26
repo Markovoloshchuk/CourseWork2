@@ -156,3 +156,33 @@ class BaseItemCreatorFrame(tk.Frame):
                     self.current_file_path = None
                     self.lbl_path_text.config(text="File is not selected")
                     self.lbl_preview.config(image="", text="Place for a preview")
+
+    def fill_fields(self, data):
+        """Заповнює поля форми даними (для редагування)"""
+        # Зберігаємо ID об'єкта, щоб знати, що оновлювати в БД
+        self.editing_id = data.get("_id")
+        
+        # Цей метод треба перевизначити у дочірніх класах, 
+        # бо базовий клас не знає, які саме поля у вас є.
+        self.fill_specific_fields(data)
+        
+        # Заповнюємо фото, якщо воно є
+        if self.has_image and data.get("image"):
+            import io
+            from PIL import Image, ImageTk
+            try:
+                img_data = io.BytesIO(data.get("image"))
+                img = Image.open(img_data)
+                img.thumbnail((200, 200))
+                tk_img = ImageTk.PhotoImage(img, master=self)
+                self.lbl_preview.config(image=tk_img, text="")
+                self.lbl_preview.image = tk_img #type: ignore
+                self.lbl_path_text.config(text="Image from Database")
+                # Зберігаємо старе фото, якщо користувач не обере нове
+                self.original_image_binary = data.get("image") 
+            except Exception as e:
+                print(f"Error loading preview: {e}")
+
+    def fill_specific_fields(self, data):
+        """Перевизначте це в Model/Fabric/Tailor creator frame"""
+        pass
